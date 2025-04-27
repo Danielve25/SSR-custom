@@ -1,34 +1,34 @@
-import './App.css'
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
+import { useEffect, useState } from "react";
+import routes from "./router";
+import { RouterContext } from "./router"; // Importa el componente Link
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [currentPath, setCurrentPath] = useState("/");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCurrentPath(window.location.pathname);
+
+      const onPopState = () => setCurrentPath(window.location.pathname);
+      window.addEventListener("popstate", onPopState);
+
+      return () => window.removeEventListener("popstate", onPopState);
+    }
+  }, []);
+
+  const navigate = (to) => {
+    window.history.pushState({}, "", to);
+    setCurrentPath(to);
+  };
+
+  const route = routes.find((r) => r.path === currentPath) || {
+    element: <div>404 - Página no encontrada</div>,
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <RouterContext.Provider value={{ navigate, currentPath }}>
+      {/* Renderiza el componente correspondiente */}
+      {route.element}
+    </RouterContext.Provider>
+  );
 }
-
-export default App
